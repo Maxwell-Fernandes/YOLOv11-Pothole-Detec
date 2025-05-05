@@ -1,0 +1,6 @@
+flask
+flask-cors
+ultralytics
+supervision
+opencv-python-headless
+numpy

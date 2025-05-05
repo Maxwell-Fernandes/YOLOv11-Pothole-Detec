@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Pothole Detection</title>
+    <style>
+        /* Base Styles */
+        :root {
+            --primary-color: #3498db;
+            --primary-hover: #2980b9;
+            --dark-color: #2c3e50;
+            --light-bg: #f4f7fa;
+            --card-bg: #fff;
+            --border-radius: 8px;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--light-bg);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        /* Header Component */
+        .header {
+            background-color: var(--dark-color);
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+
+        /* Container Component */
+        .container {
+            width: 80%;
+            max-width: 900px;
+            margin: 50px auto;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 30px;
+        }
+
+        /* Upload Component */
+        .upload-container {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px dashed #ddd;
+            border-radius: var(--border-radius);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .file-input {
+            padding: 10px;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        /* Button Component */
+        .btn {
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            margin-top: 20px;
+            border: none;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        /* Section Component */
+        .section {
+            margin-top: 40px;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        /* Image Display Component */
+        .image-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .image-container {
+            flex: 1;
+            min-width: 250px;
+            max-width: 400px;
+            margin-bottom: 20px;
+        }
+
+        .image-card {
+            border: 1px solid #eee;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .image-card-header {
+            background-color: #f5f5f5;
+            padding: 10px;
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .image-wrapper {
+            padding: 10px;
+            text-align: center;
+        }
+
+        .display-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        /* Results Component */
+        .results-container {
+            margin-top: 30px;
+        }
+
+        .code-block {
+            font-family: monospace;
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            margin-top: 20px;
+        }
+
+        .error-message {
+            color: red;
+            font-weight: bold;
+            padding: 10px;
+            background-color: #ffeeee;
+            border-radius: 5px;
+        }
+
+        /* Loading Indicator */
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Status Message */
+        .status-message {
+            text-align: center;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <h1>YOLOv11 Pothole Detection</h1>
+</header>
+
+<div class="container">
+    <div class="upload-container">
+        <h2>Upload an Image</h2>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="file-input-wrapper">
+                <input type="file" name="image" id="imageInput" accept="image/*" class="file-input" required />
+            </div>
+            <button type="submit" id="submitBtn" class="btn">Detect Potholes</button>
+        </form>
+        <div id="loader" class="loader"></div>
+        <div id="statusMessage" class="status-message hidden"></div>
+    </div>
+
+    <div id="imageSection" class="section hidden">
+        <h2 class="section-title">Images</h2>
+        <div class="image-display">
+            <div class="image-container">
+                <div class="image-card">
+                    <div class="image-card-header">Original Image</div>
+                    <div class="image-wrapper">
+                        <img id="originalImage" class="display-image" alt="Original Image" />
+                    </div>
+                </div>
+            </div>
+            <div class="image-container">
+                <div class="image-card">
+                    <div class="image-card-header">Annotated Image</div>
+                    <div class="image-wrapper">
+                        <img id="annotatedImage" class="display-image" alt="Annotated Image" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="resultsSection" class="section hidden">
+        <h2 class="section-title">Detection Results</h2>
+        <div class="results-container">
+            <pre id="detectionOutput" class="code-block"></pre>
+        </div>
+    </div>
+</div>
+
+<script>
+    // App Configuration
+    const config = {
+        apiEndpoint: '/predict',
+        supportedFormats: ['image/jpeg', 'image/png', 'image/webp']
+    };
+
+    // DOM Elements Module
+    const DOM = {
+        init() {
+            this.form = document.getElementById('uploadForm');
+            this.imageInput = document.getElementById('imageInput');
+            this.submitBtn = document.getElementById('submitBtn');
+            this.loader = document.getElementById('loader');
+            this.statusMessage = document.getElementById('statusMessage');
+            this.imageSection = document.getElementById('imageSection');
+            this.originalImage = document.getElementById('originalImage');
+            this.annotatedImage = document.getElementById('annotatedImage');
+            this.resultsSection = document.getElementById('resultsSection');
+            this.detectionOutput = document.getElementById('detectionOutput');
+        }
+    };
+
+    // Image Handling Module
+    const ImageHandler = {
+        validateFile(file) {
+            if (!file) return { valid: false, message: 'No file selected' };
+
+            // Check file type
+            if (!config.supportedFormats.includes(file.type)) {
+                return {
+                    valid: false,
+                    message: 'Unsupported file format. Please upload a JPG, PNG, or WebP image.'
+                };
+            }
+
+            // Check file size (limit to 10MB)
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            if (file.size > maxSize) {
+                return {
+                    valid: false,
+                    message: 'File size exceeds 10MB limit.'
+                };
+            }
+
+            return { valid: true };
+        },
+
+        displayOriginalImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+                    DOM.originalImage.src = e.target.result;
+                    DOM.imageSection.classList.remove('hidden');
+                    resolve(e.target.result);
+                };
+
+                reader.onerror = () => {
+                    reject(new Error('Failed to read file'));
+                };
+
+                reader.readAsDataURL(file);
+            });
+        }
+    };
+
+    // API Service Module
+    const ApiService = {
+        async sendImage(formData) {
+            try {
+                const response = await fetch(config.apiEndpoint, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
+            }
+        }
+    };
+
+    // UI Controller Module
+    const UIController = {
+        showLoader() {
+            DOM.loader.style.display = 'block';
+            DOM.submitBtn.disabled = true;
+        },
+
+        hideLoader() {
+            DOM.loader.style.display = 'none';
+            DOM.submitBtn.disabled = false;
+        },
+
+        showStatus(message, isError = false) {
+            DOM.statusMessage.textContent = message;
+            DOM.statusMessage.classList.remove('hidden');
+            DOM.statusMessage.style.backgroundColor = isError ? '#ffeeee' : '#eeffee';
+            DOM.statusMessage.style.color = isError ? '#cc0000' : '#006600';
+
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                DOM.statusMessage.classList.add('hidden');
+            }, 5000);
+        },
+
+        displayResults(data) {
+            // Display annotated image
+            if (data.annotated_image) {
+                DOM.annotatedImage.src = "data:image/jpeg;base64," + data.annotated_image;
+            }
+
+            // Display detection results
+            if (data.detections) {
+                DOM.detectionOutput.textContent = JSON.stringify(data.detections, null, 2);
+                DOM.resultsSection.classList.remove('hidden');
+            }
+        },
+
+        handleError(error) {
+            this.showStatus(`Error: ${error.message}`, true);
+            console.error('Error:', error);
+        }
+    };
+
+    // App Controller Module
+    const App = {
+        init() {
+            DOM.init();
+            this.bindEvents();
+        },
+
+        bindEvents() {
+            DOM.form.addEventListener('submit', this.handleFormSubmit.bind(this));
+            DOM.imageInput.addEventListener('change', this.handleImageChange.bind(this));
+        },
+
+        async handleImageChange(e) {
+            const file = e.target.files[0];
+
+            if (!file) return;
+
+            const validation = ImageHandler.validateFile(file);
+
+            if (!validation.valid) {
+                UIController.showStatus(validation.message, true);
+                DOM.imageInput.value = '';
+                return;
+            }
+
+            try {
+                await ImageHandler.displayOriginalImage(file);
+                DOM.annotatedImage.src = '';
+                DOM.detectionOutput.textContent = '';
+                DOM.resultsSection.classList.add('hidden');
+            } catch (error) {
+                UIController.handleError(error);
+            }
+        },
+
+        async handleFormSubmit(e) {
+            e.preventDefault();
+
+            const file = DOM.imageInput.files[0];
+            const validation = ImageHandler.validateFile(file);
+
+            if (!validation.valid) {
+                UIController.showStatus(validation.message, true);
+                return;
+            }
+
+            UIController.showLoader();
+
+            try {
+                const formData = new FormData(DOM.form);
+                const data = await ApiService.sendImage(formData);
+
+                UIController.hideLoader();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                UIController.displayResults(data);
+                UIController.showStatus('Detection completed successfully!');
+            } catch (error) {
+                UIController.hideLoader();
+                UIController.handleError(error);
+            }
+        }
+    };
+
+    // Initialize app when document is ready
+    document.addEventListener('DOMContentLoaded', () => {
+        App.init();
+    });
+</script>
+
+</body>
+</html>
