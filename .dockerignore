@@ -1,0 +1,57 @@
+# Version control
+.git
+.gitignore
+.github
+
+# IDE files
+.idea
+.vscode
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.pytest_cache
+.coverage
+htmlcov
+
+# Environment
+venv
+env
+.env
+.venv
+.python-version
+
+# Distribution / packaging
+dist
+build
+*.egg-info
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Documentation
+README.md
+LICENSE
+docs
+
+# Large files that aren't needed at runtime
+*.weights
+*.backup
+datasets
+data-samples
+*.log
+*.csv
+*.zip
+*.tar.gz
+
+# Keep only necessary model files
+# Remove this if you need these files
+!best.pt
+
+# Temporary files
+tmp
+temp

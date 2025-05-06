@@ -1,30 +1,47 @@
-FROM python:3.10-slim
-
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+# Multi-stage build for a smaller final image
+FROM python:3.10-slim AS builder
 
 WORKDIR /app
 
-# Install system-level dependencies
-RUN apt-get update && apt-get install -y \
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
     && rm -rf /var/lib/apt/lists/*
-
-# Add non-root user (optional but recommended)
-RUN adduser --disabled-password appuser
 
 # Install Python dependencies
 COPY requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip wheel --no-cache-dir --wheel-dir /app/wheels -r requirements.txt
 
-# Copy app
-COPY . .
+# Final stage
+FROM python:3.10-slim
 
-# Use non-root user
+WORKDIR /app
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy pre-built wheels from builder stage
+COPY --from=builder /app/wheels /wheels
+RUN pip install --no-cache-dir /wheels/*
+
+# Add non-root user
+RUN adduser --disabled-password --gecos "" appuser
+
+# Copy application files
+COPY app.py inference.py ./
+COPY templates ./templates/
+COPY best.pt ./
+
+# Set proper permissions
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
 USER appuser
 
 EXPOSE 8000
